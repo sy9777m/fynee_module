@@ -2,6 +2,8 @@ import requests as rq
 import pandas as pd
 import json
 import io
+from datetime import date
+from bs4 import BeautifulSoup as bs
 
 
 class KrxDelisting:
@@ -198,3 +200,32 @@ class KrxListing:
         ect_listing = pd.read_csv(io.BytesIO(result.content))
 
         return ect_listing
+
+    # from 1990.01.03
+    def naver_finance_day_price(self, symbol):
+        first_day = date(1990, 1, 3)
+        today = date.today()
+
+        request_days = (today - first_day).days
+
+        url = 'https://fchart.stock.naver.com/sise.nhn?symbol=' + symbol + '&timeframe=day&count=' + str(request_days) + '&requestType=0'
+        url_header = {
+            'User-Agent': 'Chrome/86.0.4240.111 Safari/537.36',
+        }
+
+        res = rq.get(url, headers=url_header)
+        parse = bs(res.content)
+
+        items = parse.find_all('item')
+
+        price_df_columns = ['date', 'open', 'high', 'low', 'close', 'volume']
+        day_price_df = pd.DataFrame(None, columns=price_df_columns)
+
+        for i in items:
+            data = i.attrs['data'].split('|')
+            temp_dict = {}
+            for index, data in enumerate(data):
+                temp_dict[price_df_columns[index]] = data
+            day_price_df = day_price_df.append(temp_dict, ignore_index=True)
+
+        return day_price_df
