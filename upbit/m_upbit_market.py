@@ -47,6 +47,18 @@ def upbitDayCandle(market, count, to=''):
         raise e
 
 
+def upbitWeekCandle(market, count, to=''):
+    url = "https://api.upbit.com/v1/candles/weeks"
+
+    querystring = {"count": str(count), "market": market}
+
+    try:
+        response = requests.get(url, params=querystring)
+        return pd.DataFrame(response.json())
+    except Exception as e:
+        raise e
+
+
 def upbitMonthCandle(market, count, to=''):
     url = "https://api.upbit.com/v1/candles/months"
 
